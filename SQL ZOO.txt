@@ -1,0 +1,249 @@
+JOIN 
+1. q = Modify it to show the matchid and player name for all goals scored by Germany. 
+       To identify German players
+   a = SELECT matchid, player FROM goal 
+        WHERE teamid = 'GER'
+
+2  q = From the previous query you can see that Lars Bender's scored a goal in game 1012. 
+       Now we want to know what teams were playing in that match.
+   a = SELECT id,stadium,team1,team2
+       FROM game
+       where id = '1012'
+
+3. q = Modify it to show the player, teamid, stadium and mdate for every German goal.
+   a = SELECT player,teamid, stadium, mdate
+       FROM game JOIN goal ON (id=matchid)
+       where teamid = 'GER'
+
+4. q = Show the team1, team2 and player for every 
+       goal scored by a player called Mario
+   a = SELECT team1, team2, player
+       FROM game JOIN goal ON (id=matchid)
+       where player like 'Mario%'
+
+5 q = Show player, teamid, coach, gtime for all goals scored in the first 10 minutes
+  a = SELECT player, teamid, coach, gtime
+      FROM goal join eteam on (teamid=id)
+      WHERE gtime<=10
+
+6 q = List the the dates of the matches and the name of 
+      the team in which 'Fernando Santos' was the team1 coach.
+  a = select mdate, teamname
+      from game JOIN eteam ON (team1=eteam.id)
+      where coach = 'Fernando Santos' 
+
+7 q = List the player for every goal scored 
+      in a game where the stadium was 'National Stadium, Warsaw'
+  a = select player
+      from game join goal on (id=matchid)
+      where stadium = 'National Stadium, Warsaw'
+
+8 q = Instead show the name of all players who scored a goal against Germany.
+  a = SELECT  distinct player
+      FROM game JOIN goal ON  id=matchid 
+      WHERE (team1='GER' or team2='GER') and teamid <> 'GER'
+ 
+9 q = Show teamname and the total number of goals scored.
+  a = SELECT teamname, count(player)
+      FROM eteam JOIN goal ON id=teamid
+      GROUP BY teamname
+ 
+10 q = Show the stadium and the number of goals scored in each stadium.
+   a = SELECT STADIUM, COUNT(PLAYER) 
+       FROM game JOIN goal ON ID=MATCHID
+       GROUP BY STADIUM
+
+11  q = For every match involving 'POL', show the matchid, 
+        date and the number of goals scored.
+
+    a = SELECT matchid,mdate,count(teamid)
+        FROM game JOIN goal ON matchid = id 
+        where (team1 like 'POL' or team2 like 'POL')
+        group by matchid
+
+12 q = For every match where 'GER' scored, show matchid, match date 
+       and the number of goals scored by 'GER'
+   a = select matchid, mdate, count(teamid)
+       from game JOIN goal ON matchid = id
+       where teamid = 'GER'
+       group by matchid
+
+
+13 q = List every match with the goals scored by each team as shown. 
+       This will use "CASE WHEN" which has not been explained in any previous exercises.
+mdate	team1	score1	team2	score2
+1 July 2012	ESP	4	ITA	0
+10 June 2012	ESP	1	ITA	1
+10 June 2012	IRL	1	CRO	3
+...
+
+   a = SELECT mdate,
+              team1,
+              CASE WHEN teamid=team1 THEN 1 ELSE 0 END score1,
+              team2,
+              CASE WHEN teamid=team2 THEN 1 ELSE 0 END score2
+       FROM game JOIN goal ON matchid = id
+       group by mdate 
+
+
+WINEDOWS FUNCTION
+
+1 q = Show the lastName, party and votes for the constituency 'S14000024' in 2017
+  a = SELECT lastName, party, votes
+      FROM ge
+      WHERE constituency = 'S14000024' AND yr = 2017
+      ORDER BY votes DESC
+
+2 q = Show the party and RANK for constituency S14000024 in 2017. List the output by party
+  a = SELECT party, votes,
+             RANK() OVER (ORDER BY votes DESC) as po
+      FROM ge
+      WHERE constituency = 'S14000024' AND yr = 2017
+      ORDER BY party
+
+
+3 q = Use PARTITION to show the ranking of each party in S14000021 in each year. 
+      Include yr, party, votes and ranking (the party with the most votes is 1).
+  a = SELECT yr,party, votes,
+      RANK() OVER (PARTITION BY yr ORDER BY votes DESC) as po
+      FROM ge
+      WHERE constituency = 'S14000021'  
+      ORDER BY party,yr
+
+4 q = Use PARTITION BY constituency to show the ranking of each party in Edinburgh in 2017.
+       Order your results so the winners are shown first, then ordered by constituency.
+   
+
+
+MORE JOIN OPERATION
+
+1 q = List the films where the yr is 1962 [Show id, title]
+  a = SELECT id, title
+      FROM movie
+      WHERE yr=1962
+
+2 q = Give year of 'Citizen Kane'.
+  a = select yr
+      from movie
+      where title = 'citizen Kane'
+
+3 q = List all of the Star Trek movies, include the id, title and yr (all of these movies 
+      include the words Star Trek in the title). Order results by year.
+  a = select id, title, yr
+      from movie
+      where title like 'Star Trek%'
+      order by yr
+
+4 q = What id number does the actor 'Glenn Close' have?
+  a = select id 
+      from actor
+      where name = 'Glenn Close'
+
+5 q = What is the id of the film 'Casablanca'
+  a = select id
+      from movie
+      where title = 'Casablanca'
+
+6 q = Obtain the cast list for 'Casablanca'.
+      what is a cast list?
+      Use movieid=11768
+  a = select name
+      from actor join casting on id=actorid 
+      where movieid = '11768'
+
+
+7 q = Obtain the cast list for the film 'Alien'
+  a = select name
+      from actor join casting on actor.id=actorid 
+      join movie on casting.movieid=movie.id
+      where title = 'Alien'
+
+8 q = List the films in which 'Harrison Ford' has appeared
+  a = select title
+      from movie join casting on movie.id = casting.movieid
+           join actor on casting.actorid = actor.id
+      where actor.name = 'Harrison Ford'
+
+9 q = List the films where 'Harrison Ford' has appeared - but not in the starring role.
+  a = select title 
+      from movie join casting on movie.id = casting.movieid
+            join actor on casting.actorid = actor.id
+       where actor.name = 'Harrison Ford' and ord!=1
+
+10 q = List the films together with the leading star for all 1962 films.
+   a = select title, name 
+       from movie join casting on movie.id = casting.movieid
+            join actor on casting.actorid = actor.id
+        where yr = 1962 and ord= 1
+
+11 q = Which were the busiest years for 'Rock Hudson', show the year and the number of 
+       movies he made each year for any year in which he made more than 2 movies.
+   a = SELECT yr,COUNT(title) FROM
+       movie JOIN casting ON movie.id=movieid
+             JOIN actor   ON actorid=actor.id
+       WHERE name='Rock Hudson'
+       GROUP BY yr
+        HAVING COUNT(title) > 2
+
+12 q = List the film title and the leading actor for all of the films 'Julie Andrews' played in.
+   a = select title,name
+       from movie JOIN casting ON movieid=movie.id 
+                 JOIN actor ON actorid=actor.id
+        where ord = 1 and movie.id IN (
+                                 SELECT movieid FROM casting
+                                 WHERE actorid IN (
+                                               SELECT id FROM actor
+                                               WHERE name='Julie Andrews'))
+
+SELF JOIN
+
+1 q = How many stops are in the database.
+  a = select count(id)
+      from stops
+
+2 q = Find the id value for the stop 'Craiglockhart'
+  a = select id
+      from stops
+      where name = 'Craiglockhart'
+
+4 q = The query shown gives the number of routes that visit either London Road (149) or Craiglockhart (53). 
+      Run the query and notice the two services that link these stops have a count of 2. 
+      Add a HAVING clause to restrict the output to these two routes.
+  a = SELECT company, num, COUNT(*)
+      FROM route WHERE stop=149 OR stop=53
+      GROUP BY company, num
+      HAVING count(*) = 2
+
+5 q = Execute the self join shown and observe that b.stop gives all the places you can get
+      to from Craiglockhart, without changing routes. Change the query so that it shows 
+      the services from Craiglockhart to London Road.
+  a = SELECT a.company, a.num, a.stop, b.stop
+      FROM route a JOIN route b ON
+             (a.company=b.company AND a.num=b.num)
+      WHERE a.stop=53 and b.stop = 149
+
+6 q = The query shown is similar to the previous one, however by joining two copies of the
+      stops table we can refer to stops by name rather than by number. Change the query so
+      that the services between 'Craiglockhart' and 'London Road' are shown.
+      If you are tired of these places try 'Fairmilehead' against 'Tollcross'
+  a = SELECT a.company, a.num, stopa.name, stopb.name
+      FROM route a JOIN route b ON
+           (a.company=b.company AND a.num=b.num)
+           JOIN stops stopa ON (a.stop=stopa.id)
+           JOIN stops stopb ON (b.stop=stopb.id)
+       WHERE stopa.name='Craiglockhart' and stopb.name = 'London Road'
+
+8 q = Give a list of the services which connect the stops 'Craiglockhart' and 'Tollcross'
+  a = SELECT a.company, a.num
+      FROM route a JOIN route b ON (a.company=b.company AND a.num=b.num)
+                   JOIN stops stopa ON (a.stop=stopa.id)
+                    JOIN stops stopb ON (b.stop=stopb.id)
+      WHERE stopa.name='Craiglockhart' and stopb.name = 'Tollcross'
+
+
+
+
+
+
+
+
