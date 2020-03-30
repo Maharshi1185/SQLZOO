@@ -1,0 +1,607 @@
+JOIN 
+1. q = Modify it to show the matchid and player name for all goals scored by Germany. 
+       To identify German players
+   a = SELECT matchid, player FROM goal 
+        WHERE teamid = 'GER'
+
+2  q = From the previous query you can see that Lars Bender's scored a goal in game 1012. 
+       Now we want to know what teams were playing in that match.
+   a = SELECT id,stadium,team1,team2
+       FROM game
+       where id = '1012'
+
+3. q = Modify it to show the player, teamid, stadium and mdate for every German goal.
+   a = SELECT player,teamid, stadium, mdate
+       FROM game JOIN goal ON (id=matchid)
+       where teamid = 'GER'
+
+4. q = Show the team1, team2 and player for every 
+       goal scored by a player called Mario
+   a = SELECT team1, team2, player
+       FROM game JOIN goal ON (id=matchid)
+       where player like 'Mario%'
+
+5 q = Show player, teamid, coach, gtime for all goals scored in the first 10 minutes
+  a = SELECT player, teamid, coach, gtime
+      FROM goal join eteam on (teamid=id)
+      WHERE gtime<=10
+
+6 q = List the the dates of the matches and the name of 
+      the team in which 'Fernando Santos' was the team1 coach.
+  a = select mdate, teamname
+      from game JOIN eteam ON (team1=eteam.id)
+      where coach = 'Fernando Santos' 
+
+7 q = List the player for every goal scored 
+      in a game where the stadium was 'National Stadium, Warsaw'
+  a = select player
+      from game join goal on (id=matchid)
+      where stadium = 'National Stadium, Warsaw'
+
+8 q = Instead show the name of all players who scored a goal against Germany.
+  a = SELECT  distinct player
+      FROM game JOIN goal ON  id=matchid 
+      WHERE (team1='GER' or team2='GER') and teamid <> 'GER'
+ 
+9 q = Show teamname and the total number of goals scored.
+  a = SELECT teamname, count(player)
+      FROM eteam JOIN goal ON id=teamid
+      GROUP BY teamname
+ 
+10 q = Show the stadium and the number of goals scored in each stadium.
+   a = SELECT STADIUM, COUNT(PLAYER) 
+       FROM game JOIN goal ON ID=MATCHID
+       GROUP BY STADIUM
+
+11  q = For every match involving 'POL', show the matchid, 
+        date and the number of goals scored.
+
+    a = SELECT matchid,mdate,count(teamid)
+        FROM game JOIN goal ON matchid = id 
+        where (team1 like 'POL' or team2 like 'POL')
+        group by matchid
+
+12 q = For every match where 'GER' scored, show matchid, match date 
+       and the number of goals scored by 'GER'
+   a = select matchid, mdate, count(teamid)
+       from game JOIN goal ON matchid = id
+       where teamid = 'GER'
+       group by matchid
+
+
+13 q = List every match with the goals scored by each team as shown. 
+       This will use "CASE WHEN" which has not been explained in any previous exercises.
+mdate	team1	score1	team2	score2
+1 July 2012	ESP	4	ITA	0
+10 June 2012	ESP	1	ITA	1
+10 June 2012	IRL	1	CRO	3
+...
+
+   a = SELECT mdate,
+              team1,
+              CASE WHEN teamid=team1 THEN 1 ELSE 0 END score1,
+              team2,
+              CASE WHEN teamid=team2 THEN 1 ELSE 0 END score2
+       FROM game JOIN goal ON matchid = id
+       group by mdate 
+
+
+WINEDOWS FUNCTION
+
+1 q = Show the lastName, party and votes for the constituency 'S14000024' in 2017
+  a = SELECT lastName, party, votes
+      FROM ge
+      WHERE constituency = 'S14000024' AND yr = 2017
+      ORDER BY votes DESC
+
+2 q = Show the party and RANK for constituency S14000024 in 2017. List the output by party
+  a = SELECT party, votes,
+             RANK() OVER (ORDER BY votes DESC) as po
+      FROM ge
+      WHERE constituency = 'S14000024' AND yr = 2017
+      ORDER BY party
+
+
+3 q = Use PARTITION to show the ranking of each party in S14000021 in each year. 
+      Include yr, party, votes and ranking (the party with the most votes is 1).
+  a = SELECT yr,party, votes,
+      RANK() OVER (PARTITION BY yr ORDER BY votes DESC) as po
+      FROM ge
+      WHERE constituency = 'S14000021'  
+      ORDER BY party,yr
+
+4 q = Use PARTITION BY constituency to show the ranking of each party in Edinburgh in 2017.
+       Order your results so the winners are shown first, then ordered by constituency.
+  a = SELECT constituency,party, votes, rank() over (partition by constituency order by votes desc) as posn
+      FROM ge
+      WHERE (constituency BETWEEN 'S14000021' AND 'S14000026')
+      AND yr  = 2017
+      ORDER BY posn, constituency
+
+5 q = Show the parties that won for each Edinburgh constituency in 2017.
+  a = SELECT constituency,party from (select constituency, party, votes, rank() over (partition by constituency order by votes desc) as posn
+                  FROM ge
+                  WHERE constituency BETWEEN 'S14000021' AND 'S14000026'
+                  AND yr  = 2017) t
+      where t.posn = 1
+      ORDER BY constituency 
+
+6 q = 
+
+MORE JOIN OPERATION
+
+1 q = List the films where the yr is 1962 [Show id, title]
+  a = SELECT id, title
+      FROM movie
+      WHERE yr=1962
+
+2 q = Give year of 'Citizen Kane'.
+  a = select yr
+      from movie
+      where title = 'citizen Kane'
+
+3 q = List all of the Star Trek movies, include the id, title and yr (all of these movies 
+      include the words Star Trek in the title). Order results by year.
+  a = select id, title, yr
+      from movie
+      where title like 'Star Trek%'
+      order by yr
+
+4 q = What id number does the actor 'Glenn Close' have?
+  a = select id 
+      from actor
+      where name = 'Glenn Close'
+
+5 q = What is the id of the film 'Casablanca'
+  a = select id
+      from movie
+      where title = 'Casablanca'
+
+6 q = Obtain the cast list for 'Casablanca'.
+      what is a cast list?
+      Use movieid=11768
+  a = select name
+      from actor join casting on id=actorid 
+      where movieid = '11768'
+
+
+7 q = Obtain the cast list for the film 'Alien'
+  a = select name
+      from actor join casting on actor.id=actorid 
+      join movie on casting.movieid=movie.id
+      where title = 'Alien'
+
+8 q = List the films in which 'Harrison Ford' has appeared
+  a = select title
+      from movie join casting on movie.id = casting.movieid
+           join actor on casting.actorid = actor.id
+      where actor.name = 'Harrison Ford'
+
+9 q = List the films where 'Harrison Ford' has appeared - but not in the starring role.
+  a = select title 
+      from movie join casting on movie.id = casting.movieid
+            join actor on casting.actorid = actor.id
+       where actor.name = 'Harrison Ford' and ord!=1
+
+10 q = List the films together with the leading star for all 1962 films.
+   a = select title, name 
+       from movie join casting on movie.id = casting.movieid
+            join actor on casting.actorid = actor.id
+        where yr = 1962 and ord= 1
+
+11 q = Which were the busiest years for 'Rock Hudson', show the year and the number of 
+       movies he made each year for any year in which he made more than 2 movies.
+   a = SELECT yr,COUNT(title) FROM
+       movie JOIN casting ON movie.id=movieid
+             JOIN actor   ON actorid=actor.id
+       WHERE name='Rock Hudson'
+       GROUP BY yr
+        HAVING COUNT(title) > 2
+
+12 q = List the film title and the leading actor for all of the films 'Julie Andrews' played in.
+   a = select title,name
+       from movie JOIN casting ON movieid=movie.id 
+                 JOIN actor ON actorid=actor.id
+        where ord = 1 and movie.id IN (
+                                 SELECT movieid FROM casting
+                                 WHERE actorid IN (
+                                               SELECT id FROM actor
+                                               WHERE name='Julie Andrews'))
+
+SELF JOIN
+
+1 q = How many stops are in the database.
+  a = select count(id)
+      from stops
+
+2 q = Find the id value for the stop 'Craiglockhart'
+  a = select id
+      from stops
+      where name = 'Craiglockhart'
+
+4 q = The query shown gives the number of routes that visit either London Road (149) or Craiglockhart (53). 
+      Run the query and notice the two services that link these stops have a count of 2. 
+      Add a HAVING clause to restrict the output to these two routes.
+  a = SELECT company, num, COUNT(*)
+      FROM route WHERE stop=149 OR stop=53
+      GROUP BY company, num
+      HAVING count(*) = 2
+
+5 q = Execute the self join shown and observe that b.stop gives all the places you can get
+      to from Craiglockhart, without changing routes. Change the query so that it shows 
+      the services from Craiglockhart to London Road.
+  a = SELECT a.company, a.num, a.stop, b.stop
+      FROM route a JOIN route b ON
+             (a.company=b.company AND a.num=b.num)
+      WHERE a.stop=53 and b.stop = 149
+
+6 q = The query shown is similar to the previous one, however by joining two copies of the
+      stops table we can refer to stops by name rather than by number. Change the query so
+      that the services between 'Craiglockhart' and 'London Road' are shown.
+      If you are tired of these places try 'Fairmilehead' against 'Tollcross'
+  a = SELECT a.company, a.num, stopa.name, stopb.name
+      FROM route a JOIN route b ON
+           (a.company=b.company AND a.num=b.num)
+           JOIN stops stopa ON (a.stop=stopa.id)
+           JOIN stops stopb ON (b.stop=stopb.id)
+       WHERE stopa.name='Craiglockhart' and stopb.name = 'London Road'
+
+7 q = Give a list of all the services 
+      which connect stops 115 and 137 ('Haymarket' and 'Leith')
+  a = select a.company, a.num
+      from route a join route b on a.num=b.num
+      where a.stop = 115 and b.stop=137
+      group by num
+
+
+8 q = Give a list of the services which connect the stops 'Craiglockhart' and 'Tollcross'
+  a = SELECT a.company, a.num
+      FROM route a JOIN route b ON (a.company=b.company AND a.num=b.num)
+                   JOIN stops stopa ON (a.stop=stopa.id)
+                    JOIN stops stopb ON (b.stop=stopb.id)
+      WHERE stopa.name='Craiglockhart' and stopb.name = 'Tollcross'
+
+9 q = Give a distinct list of the stops which may be reached from 'Craiglockhart' by taking one bus, including 'Craiglockhart' itself, offered by the LRT company. 
+      Include the company and bus no. of the relevant services.
+  a = SELECT DISTINCT name, a.company, a.num
+      FROM route a
+      JOIN route b ON (a.company = b.company AND a.num = b.num)
+      JOIN stops ON a.stop = stops.id
+      WHERE b.stop = 53;
+
+10 q = Find the routes involving two buses that can go from Craiglockhart to Lochend.
+       Show the bus no. and company for the first bus, the name of the stop for the transfer,
+       and the bus no. and company for the second bus.
+   a = SELECT a.num, a.company, stopb.name, c.num, c.company
+       FROM route a JOIN route b ON (a.company = b.company AND a.num = b.num)
+                    JOIN (route c JOIN route d ON (c.company = d.company AND c.num = d.num))
+                    JOIN stops stopa ON a.stop = stopa.id
+                    JOIN stops stopb ON b.stop = stopb.id
+                    JOIN stops stopc ON c.stop = stopc.id
+                    JOIN stops stopd ON d.stop = stopd.id
+       WHERE stopa.name = 'Craiglockhart' AND stopd.name = 'Sighthill'
+	     AND stopb.name = stopc.name
+       ORDER BY LENGTH(a.num), b.num, stopb.name, LENGTH(c.num), d.num;
+
+HELP DESK
+
+1 q = There are three issues that include the words "index" and "Oracle". Find the call_date for each of them
+  a = select Call_date, Call_ref
+      from Issue
+      where Detail like '%Oracle%' and Detail like '%index%'
+
+2 q = Samantha Hall made three calls on 2017-08-14. Show the date and time for each
+  a = SELECT I.call_date, C.first_name, C.last_name
+      FROM Issue I JOIN Caller C ON (C.caller_id = I.caller_id)
+      WHERE C.first_name = 'Samantha' AND C.last_name = 'Hall'
+	AND I.call_date LIKE '%2017-08-14%'
+
+3 q = There are 500 calls in the system (roughly). 
+      Write a query that shows the number that have each status.
+  a = select status, count(status) as Volume
+      from Issue
+      group by Status
+
+4 q = Calls are not normally assigned to a manager but it does happen. 
+      How many calls have been assigned to staff who are at Manager Level?
+  a = SELECT COUNT(*) AS mlcc
+      FROM Issue I JOIN Staff S ON (I.Assigned_to = S.Staff_code)
+	          JOIN  Level L ON (S.Level_code = L.Level_code)
+      WHERE L.Manager = 'Y'
+
+
+5 q = Show the manager for each shift. Your output should include the shift date and type,
+       also the first and last name of the manager.
+   a = SELECT S.Shift_date, S.Shift_type, S.first_name,	S.last_name
+       FROM Shift S JOIN Staff S1
+		ON (S.Manager = S1.Staff_Code)
+       ORDER BY S.Shift_date;
+
+6 q = List the Company name and the number of calls for those companies with more 
+      than 18 calls.
+   a = SELECT C.Company_name, count(*)
+        FROM  Customer C JOIN Caller Ca ON (C.Company_ref = Ca.Company_ref)
+	       JOIN Issue I ON (Ca.Caller_id = I.Caller_id)
+       GROUP BY C.Company_name
+       HAVING COUNT(*) > 18
+
+7 q = Find the callers who have never made a call. Show first name and last name
+  a = SELECT C.first_name, C.last_name
+      FROM Caller C LEFT JOIN Issue I ON (C.Caller_id = I.Caller_id)
+      WHERE I.Caller_id is null
+
+8 q = For each customer show: Company name, contact name, 
+      number of calls where the number of calls is fewer than 5
+  a = SELECT x.Company_name, y.first_name, y.last_name, x.no_c
+      FROM ( SELECT Customer.Company_name, Customer.Contact_id, COUNT(*) AS no_c
+	     FROM Customer Cu join Caller C ON (Cu.Company_ref = Ca.Company_ref)
+		  join Issue I ON (C.Caller_id = I.Caller_id)
+	    GROUP BY Cu.Company_name, Cu.Contact_id
+	    HAVING count(*) < 5) AS x
+      join(SELECT *
+           FROM Caller) AS y ON (x.Contact_id = y.Caller_id);
+
+9 q = For each shift show the number of staff assigned. Beware that some roles may be NULL and that the same
+      person might have been assigned to multiple roles (The roles are 'Manager', 'Operator', 'Engineer1', 'Engineer2').
+  a = SELECT x.Shift_date, x.Shift_type,
+	count(distinct role) AS cw
+      FROM(SELECT shift_date, shift_type, Manager AS role
+	   FROM Shift
+		UNION ALL
+	   SELECT shift_date, shift_type, Operator AS role
+	   FROM Shift
+		UNION ALL
+	   SELECT shift_date, shift_type, Engineer1 AS role
+	   FROM Shift
+		UNION ALL
+	   SELECT shift_date, shift_type, Engineer2 AS role
+	   FROM Shift) AS x
+       GROUP BY x.Shift_date, x.Shift_type;
+
+10 q = Caller 'Harry' claims that the operator who took his most recent call was abusive and insulting.
+        Find out who took the call (full name) and when.
+   a = SELECT S.First_name, S.Last_name, x.Call_date 
+       FROM(SELECT I.Caller_id, max(Call_date) AS C_date 
+	    FROM Issue I  JOIN Caller C ON (I.Caller_id = C.Caller_id) 
+            WHERE C.First_name = 'Harry' 
+            GROUP BY I.Caller_id)as x 
+	    JOIN Issue I ON (x.Caller_id = I.Caller_id  AND x.Call_date = I.Call_date) 
+	    JOIN Staff S ON (I.Taken_by = S.Staff_code)
+
+11 q = Show the manager and number of calls received for each hour of the day on 2017-08-12
+   a = SELECT S.Manager, x.date_hour as Hr, COUNT(*) as C
+       FROM(SELECT DATE_FORMAT(call_date, '%Y-%m-%d %H') date_hour, DATE_FORMAT(call_date, '%Y-%m-%d') date, DATE_FORMAT(call_date, '%H') hour, Taken_by
+	    FROM Issue
+	    WHERE YEAR(call_date) = '2017' AND MONTH(call_date) = '08' AND DAY(call_date) = '12') AS x
+	     JOIN Shift S ON (x.date = S.Shift_date)
+        WHERE S.Shift_type = 'early' AND i.hour <= 13 OR S.Shift_type = 'late' AND x.hour > 13
+        GROUP BY S.Manager, x.date_hour
+       ORDER BY x.date_hour
+
+
+Adventure Works
+
+1 q = Show the first name and the email address of customer with CompanyName 'Bike World'
+  a = SELECT FirstName, EmailAddress
+      FROM Customer
+      WHERE CompanyName = 'Bike World'
+
+2 q = Show the CompanyName for all customers with an address in City 'Dallas'.
+  a = SELECT CompanyName
+      FROM Customer C JOIN CustomerAddress CA ON C.CustomerID = CA.CustomerID
+                      JOIN Address A  ON CA.AddressID = A.AddressID
+      WHERE A.City = 'Dallas'
+
+3 q = How many items with ListPrice more than $1000 have been sold?
+  a = SELECT count(*) AS tot
+      FROM SalesOrderDetail SOD JOIN Product P  ON SOD.ProductID = P.ProductID
+     WHERE P.ListPrice > 1000;
+
+4 q = Give the CompanyName of those customers with orders over $100000. Include the subtotal plus tax plus freight.
+  a =  SELECT C.CompanyName
+        FROM SalesOrderHeader SOH JOIN Customer C ON SOH.CustomerID = C.CustomerID     
+       WHERE SOH.SubTotal + SOH.TaxAmt + SOH.Freight > 100000
+
+5 q = Find the number of left racing socks ('Racing Socks, L') ordered by CompanyName 'Riding Cycles'
+  a = SELECT SUM(SOD.OrderQty) As Tot
+      FROM SalesOrderDetail SOD JOIN Product P ON SOD.ProductID = P.ProductID
+        JOIN SalesOrderHeader SOH ON SOD.SalesOrderID = SOH.SalesOrderID
+        JOIN Customer C ON SOH.CustomerID = C.CustomerID
+      WHERE P.Name = 'Racing Socks, L' AND C.CompanyName = 'Riding Cycles';
+
+6 q = A "Single Item Order" is a customer order where only one item is ordered. 
+      Show the SalesOrderID and the UnitPrice for every Single Item Order
+  a = SELECT SalesOrderID, UnitPrice
+      FROM SalesOrderDetail
+      WHERE OrderQty = 1;
+
+7 q = Where did the racing socks go? List the product name and the CompanyName for all Customers who 
+      ordered ProductModel 'Racing Socks'
+  a = SELECT P.name, C.CompanyName
+      FROM  ProductModel PM JOIN  Product P ON PM.ProductModelID = P.ProductModelID
+               JOIN SalesOrderDetail SOD  ON SOD.ProductID = P.ProductID
+               JOIN SalesOrderHeader SOH  ON SOD.SalesOrderID = SOH.SalesOrderID
+               JOIN Customer C ON SOH.CustomerID = C.CustomerID
+      WHERE PM.Name = 'Racing Socks';
+
+8 q = Show the product description for culture 'fr' for product with ProductID 736
+  a = SELECT PD.Description
+      FROM ProductDescription PD  JOIN  ProductModelProductDescription PMPD ON PD.ProductDescriptionID = PMPD.ProductDescriptionID
+             JOIN  ProductModel PM  ON PMPD.ProductModelID = PM.ProductModelID
+             JOIN Product P ON PM.ProductModelID = P.ProductModelID
+      WHERE PMPD.culture = 'fr' and Product.ProductID = '736';
+
+9 q = Use the SubTotal value in SaleOrderHeader to list orders from the largest to the smallest. 
+      For each order show the CompanyName and the SubTotal and the total weight of the order
+  a = SELECT C.CompanyName, SOH.SubTotal, SUM(SOD.OrderQty * P.weight)
+      FROM Product P JOIN SalesOrderDetail SOD  ON P.ProductID = SOD.ProductID
+                    JOIN SalesOrderHeader SOH  ON SOD.SalesOrderID = SOH.SalesorderID
+                     JOIN  Customer C ON SOH.CustomerID = C.CustomerID 
+      GROUP BY SOH.SalesOrderID, SOH.SubTotal, C.CompanyName
+      ORDER BY SOH.SubTotal DESC;
+
+10 q = How many products in ProductCategory 'Cranksets' have been sold to an address in 'London'?
+    a = SELECT sum(SOD.OrderQty)
+        FROM ProductCategory PC JOIN  Product P  ON PC.ProductCategoryID = P.ProductCategoryID
+                                JOIN SalesOrderDetail SOD ON P.ProductID = SOD.ProductID
+                                JOIN SalesOrderHeader SOH ON SOD.SalesOrderID = SOH.SalesorderID
+                                JOIN Address A ON SOH.ShipToAddressID = A.AddressID
+        WHERE A.City = 'London' AND PC.Name = 'Cranksets';
+
+11 q = For every customer with a 'Main Office' in Dallas show AddressLine1 of the 'Main Office' and AddressLine1 of the 'Shipping' address - 
+       if there is no shipping address leave it blank. Use one row per customer.
+   a = SELECT C.CompanyName, 
+              max(CASE WHEN AddressType = 'Main Office' THEN AddressLine1 ELSE '' END) AS 'Main_Office _Add',
+              max(CASE WHEN AddressType = 'Shipping' THEN AddressLine1 ELSE '' END) AS 'Shipping_Add'
+       FROM Customer C JOIN  CustomerAddress CA ON C.CustomerID = CA.CustomerID
+                       JOIN  Address A ON CA.AddressID = A.AddressID
+       WHERE A.City = 'Dallas'
+       GROUP BY C.CompanyName;
+
+
+12 q = For each order show the SalesOrderID and SubTotal calculated three ways:
+       A) From the SalesOrderHeader
+       B) Sum of OrderQty*UnitPrice
+       C) Sum of OrderQty*ListPrice
+   a = SELECT SOH.SalesOrderID, SOH.SubTotal, sum(SOD.OrderQty * SOD.UnitPrice), SUM(SOD.OrderQty * P.ListPrice)
+       FROM SalesOrderHeader SOH JOIN SalesOrderDetail SOD ON SOH.SalesOrderID = SOD.SalesOrderID
+                                 JOIN Product P ON SOD.ProductID = P.ProductID
+       GROUP BY SOH.SalesOrderID, SOH.SubTotal;
+
+13 q = Show the best selling item by value.
+   a = SELECT P.Name, sum(SOD.OrderQty * SOD.UnitPrice) AS Tot_sale_value
+       FROM Product P JOIN SalesOrderDetail SOD ON P.ProductID = SOD.ProductID 
+       GROUP BY P.Name
+       ORDER BY Tot_sale_salue DESC;
+
+
+14 q = Show how many orders are in the following ranges (in $):
+    RANGE      Num Orders      Total Value
+     0-  99
+     100- 999
+      1000-9999
+      10000-
+
+a = SELECT x.range AS 'range', count(x.Total) AS Num_Ord, sum(x.Total) AS 'Tot_Value'
+    FROM(SELECT CASE
+         WHEN SOD.UnitPrice * SOD.OrderQty BETWEEN 0 AND 99 THEN '0-99'
+         WHEN SOD.UnitPrice * SOD.OrderQty BETWEEN 100 AND 999 THEN '100-999'
+         WHEN SOD.UnitPrice * SOD.OrderQty BETWEEN 1000 AND 9999 THEN '1000-9999'
+         WHEN SOD.UnitPrice * SOD.OrderQty > 10000 THEN '10000-'
+         ELSE 'Error'
+         END AS 'range', SOD.UnitPrice * SOD.OrderQty AS Total
+     FROM SalesOrderDetail) x
+     GROUP BY x.range;
+
+
+
+Guest House
+
+1 q = Guest 1183. Give the booking_date and the number of nights for guest 1183.
+  a = SELECT booking_date, nights
+      FROM booking
+      WHERE guest_id = 1183
+
+2 q = When do they get here? List the arrival time and the first and last names for 
+      all guests due to arrive on 2016-11-05, order the output by time of arrival.
+  a = SELECT b.arrival_time, g.first_name, g.last_name
+      FROM booking b JOIN guest g ON (b.guest_id = g.id)
+      WHERE YEAR(booking.booking_date) = '2016' AND MONTH(booking.booking_date) = '11'
+	    AND DAY(booking.booking_date) = '05'
+      ORDER BY b.arrival_time;
+
+3 q = Look up daily rates. Give the daily rate that should be paid for bookings with ids 5152, 5165, 5154 and 5295. 
+      Include booking id, room type, number of occupants and the amount.
+  a = SELECT b.booking_id, b.room_type_requested, b.occupants, r.amount
+       FROM booking b JOIN rate r ON (b.occupants = r.occupancy
+	 AND b.room_type_requested = r.room_type)
+      WHERE b.booking_id = 5152 or b.booking_id = 5154 or b.booking_id = 5295;
+
+4 q = Who’s in 101? Find who is staying in room 101 on 2016-12-03, 
+      include first name, last name and address.
+  a =  SELECT g.first_name, g.last_name, g.address
+       FROM guest g JOIN booking b ON (b.guest_id = g.id)
+       WHERE b.room_no = 101 and b.booking_date = '2016-12-03'
+
+5 q = How many bookings, how many nights? For guests 1185 and 1270 show the number of bookings made and the total number nights.
+      Your output should include the guest id and the total number of bookings and the total number of nights.
+  a = SELECT guest_id, count(nights), sum(nights)
+      FROM booking
+      WHERE guest_id = 1185 OR guest_id = 1270
+      GROUP BY guest_id;
+
+
+6 q = Ruth Cadbury. Show the total amount payable by guest Ruth Cadbury for her room bookings. 
+      You should JOIN to the rate table using room_type_requested and occupants
+  a = SELECT sun(b.nights * r.amount)
+      FROM  booking b JOIN rate r ON (b.occupants = r.occupancy
+		AND b.room_type_requested = r.room_type)
+                JOIN guest g ON g.id = b.guest_id)
+      WHERE g.first_name = 'Ruth'and g.last_name = 'Cadbury' 
+
+7 q = Including Extras. Calculate the total bill for booking 5128 including extras.
+  a = SELECT sum(b.nights * r.amount) + sum(v.amount) as tot
+      FROM booking b JOIN rate r ON (b.occupants = r.occupancy
+		AND b.room_type_requested = r.room_type)
+	        JOIN (SELECT booking_id, SUM(amount) as amount
+		      FROM extra
+		      group by booking_id)as v ON (v.booking_id = b.booking_id)
+      WHERE b.booking_id = 5128;
+
+8 q = Edinburgh Residents. For every guest who has the word “Edinburgh” in their address show the total number of nights booked. 
+      Be sure to include 0 for those guests who have never had a booking. Show last name, first name, address and number of nights. 
+      Order by last name then first name 
+  a = 
+
+9 q = Show the number of people arriving. For each day of the week beginning 2016-11-25 show the number of people who are arriving that day
+  a = SELECT booking_date, count(booking_id) as arri
+      FROM booking 
+      WHERE booking_date BETWEEN '2016-11-25' AND '2016-12-01'
+      GROUP BY booking_date;
+
+10 q = How many guests? Show the number of guests in the hotel on the night of 2016-11-21. 
+       Include all those who checked in that day or before but not those who have check out on that day or before
+   a = SELECT sum(occupants)
+       FROM booking
+       WHERE booking_date <= '2016-11-21' and DATE_ADD(booking_date, interval nights day) > '2016-11-21';
+
+11 q = Coincidence. Have two guests with the same surname ever stayed in the hotel on the evening? 
+       Show the last name and both first names. Do not include duplicates.
+   a = 
+
+ 
+12 q = Check out per floor. The first digit of the room number indicates the floor – e.g. room 201 is on the 2nd floor. 
+       For each day of the week beginning 2016-11-14 show how many guests are checking out that day by floor number. 
+       Columns should be day (Monday, Tuesday ...), floor 1, floor 2, floor 3.
+   a = SELECT date_add(booking_date, INTERVAL nights DAY) as x, 
+              sum(CASE WHEN room_no LIKE '1%' THEN 1 ELSE 0 END) as 1st,
+              sum(CASE WHEN room_no LIKE '2%' THEN 1 ELSE 0 END) as 2nd,
+              sum(CASE WHEN room_no LIKE '3%' THEN 1 ELSE 0 END) as 3rd
+       FROM booking
+       WHERE date_add(booking_date, INTERVAL nights DAY) BETWEEN '2016-11-14' AND '2016-11-20'
+       GROUP BY x;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
